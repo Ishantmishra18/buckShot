@@ -1,0 +1,19 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@font-face {
+    font-family: 'cowBoy';
+    src: url('./assets/fonts/cowboy.ttf') format('truetype');
+    font-weight: normal; /* or bold if it's a bold font */
+    font-style: normal;  /* or italic if it's an italic font */
+  }
+  
+.font1{
+    font-family: 'cowBoy', serif; /* Fallback to sans-serif */
+    color: rgb(161, 161, 161)  ;
+  }
+
+.shadow{
+    background: linear-gradient(90deg , black , transparent , black);
+}
