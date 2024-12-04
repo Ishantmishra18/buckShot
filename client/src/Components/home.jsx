@@ -31,7 +31,7 @@ const Home = () => {
 
   return (
     <div className="h-screen flex flex-col justify-center items-center bg-gradient-to-r from-red-950 to-neutral-900 text-white">
-      <h1 className="text-5xl font-extrabold mb-10 animate-pulse uppercase">
+      <h1 className="text-6xl font1 mb-10 animate-pulse uppercase">
         The Roulette Game
       </h1>
 
