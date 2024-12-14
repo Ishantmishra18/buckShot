@@ -14,10 +14,8 @@ const io = new Server(server, {
 });
 
 // Game variables
-let waitingPlayer = null;
-let players = {}; // Store player IDs and their states
-let currentGunController = null; // Track whose turn it is
-let player=[]
+let currentTurn ='one'
+let players={}
 
 // Utility to generate random bullets array
 const generateBullets = () => {
@@ -46,21 +44,20 @@ const generateBullets = () => {
 
 let bullets = generateBullets();
 
-
+let waiting=null
 
 io.on('connection', (socket) => {
-  console.log('A user connected:', socket.id);
 
   socket.on('joinGame', () => {
-    if (waitingPlayer === socket.id) {
-      return;
-    }
-    if (waitingPlayer) {
-     
-      io.emit('startGame',waitingPlayer);
-      waitingPlayer = null;
+    if (!players.one && !waiting) {
+      players.one = socket.id;
+      socket.emit('playerRole', 'one');
+      waiting = socket.id;
     } else {
-      waitingPlayer = socket.id;
+      players.two = socket.id;
+      socket.emit('playerRole', 'two');
+      io.emit('startGame');
+      waiting = null;
     }
   });
 
@@ -68,21 +65,34 @@ io.on('connection', (socket) => {
     bullets = generateBullets();
     io.emit('getbullets', bullets)
   })
-  
-
   // Handle gun pointing action
   socket.on('gunPoint', (gunPoint) => {
       socket.broadcast.emit('gunPoint2', gunPoint);
-});
+  });
+  socket.on('fire',()=>{
+    if ((currentTurn=='one' && socket.id !== players.one) ||(currentTurn=='two' && socket.id !== players.two)){
+        socket.emit('gunfire',false)
+    }
+    
+    io.emit('gunfire',true)
+  })
+  socket.on('quitGame',()=>{
+    socket.broadcast.emit('opponentLeft')
+  })
+  socket.on('turnChangeit',()=>{
+    socket.broadcast.emit('turnChange')
+  })
 
-  socket.on('giveLive', (myLive , oppoLive) => {  
-    socket.broadcast.emit('updateLive',myLive , oppoLive );
-});
   socket.on('disconnect', () => {
-    console.log('User disconnected:', socket.id);
-    delete players[socket.id];
-    if (waitingPlayer === socket.id) waitingPlayer = null;
-    if (currentGunController === socket.id) currentGunController = null;
+    console.log(`Player disconnected: ${socket.id}`);
+
+    if (players.one === socket.id) {
+      players.one = null;
+      console.log(`Player one (${socket.id}) left the game.`);
+    } else if (players.two === socket.id) {
+      players.two = null;
+      console.log(`Player two (${socket.id}) left the game.`);
+    }
   });
 });
 
