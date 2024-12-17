@@ -7,23 +7,34 @@ const socket = io('http://localhost:3000'); // Initialize socket once
 const Home = () => {
   const navigate = useNavigate();
   const [isLoading, setIsLoading] = useState(false); // Loading state
-
+  const joinGameRoom = () => {
+    setIsLoading(true); // Start loader when looking for a player
+    console.log('Attempting to join game...');
+    socket.emit('joinGame');
+  };
+  
   useEffect(() => {
+    socket.on('connect', () => {
+      console.log('Connected to server with ID:', socket.id);
+    });
+  
     socket.on('startGame', () => {
+      console.log('Game started');
       setIsLoading(false); // Stop loader when game starts
       navigate('/game');
     });
-
+  
+    socket.on('error', (err) => {
+      console.error('Socket error:', err);
+    });
+  
     return () => {
       socket.off('startGame');
+      socket.off('connect');
+      socket.off('error');
     };
   }, [navigate]);
-
-  const joinGameRoom = () => {
-    setIsLoading(true); // Start loader when looking for a player
-    socket.emit('joinGame');
-  };
-
+  
   const cancelSearch = () => {
     setIsLoading(false); // Stop loader when canceled
     socket.emit('leaveGame'); // Notify server to remove from waiting
