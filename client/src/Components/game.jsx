@@ -1,6 +1,7 @@
 import React, { useEffect, useState, useMemo } from 'react';
 import { io } from 'socket.io-client';
 import Players from './players';
+import {Link} from 'react-router-dom'
 
 const Game = () => {
   const [gunPoint, setGunPoint] = useState(0);
@@ -13,6 +14,7 @@ const Game = () => {
   const [oppoLive, setOppoLive] = useState(8);
   const [showBullets, setShowBullets] = useState(true);
   const [myTurn, setMyTurn] = useState(false);
+  const [gameOver , setGameOver]=useState(false)
 
   // Socket instance
   const socket = useMemo(() => io('http://localhost:3000'), []);
@@ -52,6 +54,7 @@ const Game = () => {
     })
   }, [socket , gunPoint]);
 
+
   // Turn changes
   useEffect(() => {
     socket.on('turnChange', () => {
@@ -72,7 +75,7 @@ const Game = () => {
 useEffect(() => {
   socket.on('bulletUpdate', (bullets) => {
     setBulletIndex(bullets);
-    console.log('I got the bullet',bullets) // Synchronize bulletIndex across both players
+  // Synchronize bulletIndex across both players
   });
 
   // Listen for bullet index reset from the server
@@ -106,39 +109,75 @@ useEffect(() => {
 
 //healthbar
 useEffect(() => {
-  socket.emit('updateLive',myLive , oppoLive)
   socket.on('updateLive',(oppolive , mylive)=>{
-    setMyLive(mylive)
-    setOppoLive(oppolive)
+    setMyLive(oppolive)
+    setOppoLive(mylive)
+    console.log('heath bar is upadated mylive and oopolive are',mylive , oppolive)
   })
   
-}, [myLive, oppoLive]);
+}, []);
 
+
+//game over
+useEffect(() => {
+  if (myLive <= 0 || oppoLive <= 0) {
+    setGameOver(true);
+   
+  }
+}, [myLive, oppoLive]);
  
 //fire gun function
-  const fireGun = (liveDown, isOpponent) => {
-    const audio = new Audio(items[bulletIndex] === 0 ? './sounds/clickfire.mp3' : './sounds/gunfire.mp3');
-    audio.play();
+const fireGun = (setLive, isOpponent) => {
+  const audio = new Audio(items[bulletIndex] === 0 ? './sounds/clickfire.mp3' : './sounds/gunfire.mp3');
+  audio.play();
 
-    if (items[bulletIndex] !== 0) {
-      liveDown((prev) => prev - 1);
-    }
+  // Update health if a bullet is fired
+  if (items[bulletIndex] !== 0) {
+    setLive((prev) => {
+      const newLive = prev - 1;
+      socket.emit('updateLive', isOpponent ? myLive : newLive, isOpponent ? newLive : oppoLive); // Emit updated values
+      return newLive;
+    });
+  }
 
-    if(isOpponent || items[bulletIndex]===1){
-      setMyTurn(!myTurn)
-      socket.emit('turnChangeit')
-    }
-  
-    const newBulletIndex = bulletIndex + 1;
+  // Change turn if necessary
+  if (isOpponent || items[bulletIndex] === 1) {
+    setMyTurn((prev) => {
+      const newTurn = !prev;
+      socket.emit('turnChangeit', newTurn);
+      return newTurn;
+    });
+  }
 
-    setBulletIndex(newBulletIndex)
-    
-    socket.emit('bulletUpdate', newBulletIndex); // Emit the updated bullet index to the server
-    console.log('Shell and bullets are', newBulletIndex, items.length);
-  };
+  // Increment bullet index
+  const newBulletIndex = bulletIndex + 1;
+  setBulletIndex(newBulletIndex);
+  socket.emit('bulletUpdate', newBulletIndex); // Emit updated bullet index
+};
+
 
   return (
     <div className="page h-screen w-screen bg-black relative flex items-center justify-between px-4 overflow-hidden">
+
+      <div className={`h-full w-full absolute backdrop-blur-md top-0 left-0  grid place-content-center z-40 ${!gameOver&&'hidden'}`}>
+      <div className="gameovercard font1 w-[40vw]  h-[80vh] shadow-2xl rounded-2xl flex flex-col items-center justify-between p-10">
+    {/* Title */}
+    <div className="text-center">
+      <h1 className="text-6xl mb-4">Game Over</h1>
+      <h2 className={`text-3xl ${myLive <= 0 ? 'text-red-700' : 'text-green-700'} uppercase`}>
+        {myLive <= 0 ? 'You Lost!' : 'You Won!'}
+      </h2>
+    </div>
+    <img src={myLive<=0?'./player/lose.png':'./player/win.png'} alt="" />
+
+    {/* Button */}
+    <Link to='/'
+      className="mt-6 px-10 py-4 bg-yellow-800 hover:bg-yellow-900 text-black rounded-lg text-2xl font-bold uppercase shadow-lg duration-300"
+    >
+      Back to Home
+    </Link>
+  </div>
+      </div>
       {/* Bullets Section */}
       <div className={`bullets grid place-content-center backdrop-blur-sm absolute top-0 h-screen w-screen z-40 ${!showBullets && 'hidden'}`}>
   <div className="bulletcont flex gap-5">

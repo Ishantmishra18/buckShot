@@ -98,7 +98,10 @@ io.on('connection', (socket) => {
       }
     }
   });
-  
+
+  socket.on('gunPoint',(gunpoint)=>{
+    io.emit('gunPoint2',gunpoint)
+  })
 
   socket.on('bulletUpdate', (bulletIndex) => {
     const roomName = Object.keys(rooms).find((room) => rooms[room].includes(socket.id));
@@ -131,7 +134,7 @@ io.on('connection', (socket) => {
     const roomName = Object.keys(rooms).find((room) => rooms[room].includes(socket.id));
     if (roomName) {
       const opponent = rooms[roomName].find((player) => player !== socket.id);
-      io.to(opponent).emit('updateLive', oppoLive, myLive);
+      socket.to(opponent).emit('updateLive', oppoLive, myLive);
     }
   });
 
