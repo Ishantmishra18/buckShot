@@ -159,7 +159,7 @@ const fireGun = (setLive, isOpponent) => {
   return (
     <div className="page h-screen w-screen bg-black relative flex items-center justify-between px-4 overflow-hidden">
 
-      <div className={`h-full w-full absolute backdrop-blur-md top-0 left-0  grid place-content-center z-40 ${!gameOver&&'hidden'}`}>
+      <div className={`h-full w-full absolute backdrop-blur-md top-0 left-0  grid place-content-center z-50 ${!gameOver&&'hidden'}`}>
       <div className="gameovercard font1 w-[40vw]  h-[80vh] shadow-2xl rounded-2xl flex flex-col items-center justify-between p-10">
     {/* Title */}
     <div className="text-center">
@@ -180,18 +180,20 @@ const fireGun = (setLive, isOpponent) => {
       </div>
       {/* Bullets Section */}
       <div className={`bullets grid place-content-center backdrop-blur-sm absolute top-0 h-screen w-screen z-40 ${!showBullets && 'hidden'}`}>
-  <div className="bulletcont flex gap-5">
-    {/* {[...items]
-      .map((item, index) => ({ item, index })) // Pair items with their original indices
-      .sort(() => Math.random() - 0.5)} // Shuffle the pairs randomly */
-      items.map(( val , index ) => (
-        <div key={index} className="w-5 h-12 flex flex-col items-center rounded-t-lg overflow-hidden relative">
-          <div className="shadow absolute top-0 left-0 w-full h-full"></div>
-          <div className={`topshell w-full h-[70%] ${val === 1 ? 'bg-red-500' : 'bg-green-500'}`}></div>
-          <div className="btmshell w-full h-[30%] bg-neutral-700"></div>
-        </div>
-      ))}
-  </div>
+      <div className="bulletcont flex gap-5">
+  {[...items] // Create a shallow copy of the original array
+    .sort(() => Math.random() - 0.5) // Shuffle the copied array
+    .map((val, index) => (
+      <div
+        key={index}
+        className="w-5 h-12 flex flex-col items-center rounded-t-lg overflow-hidden relative"
+      >
+        <div className="shadow absolute top-0 left-0 w-full h-full"></div>
+        <div className={`topshell w-full h-[70%] ${val === 1 ? 'bg-red-500' : 'bg-green-500'}`}></div>
+        <div className="btmshell w-full h-[30%] bg-neutral-700"></div>
+      </div>
+    ))}
+</div>
 </div>
 
 
