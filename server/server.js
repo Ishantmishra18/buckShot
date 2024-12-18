@@ -104,8 +104,9 @@ io.on('connection', (socket) => {
     const roomName = Object.keys(rooms).find((room) => rooms[room].includes(socket.id));
     if (roomName) {
       // Broadcast the updated bullet index to all players in the room
-      socket.to(roomName).emit('bulletUpdate', bulletIndex);
-      console.log('bullet bhej di')
+      const otherPlayer = rooms[roomName].find(playerId => playerId !== socket.id);
+      if (otherPlayer) {
+        socket.to(otherPlayer).emit('bulletUpdate',bulletIndex);}
     }
   });
   
