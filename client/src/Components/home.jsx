@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { io } from 'socket.io-client';
 
-const socket = io('http://localhost:3000'); // Initialize socket once
+const socket = io('https://buckshot.onrender.com'); // Initialize socket once
 
 const Home = () => {
   const navigate = useNavigate();

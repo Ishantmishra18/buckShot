@@ -17,7 +17,7 @@ const Game = () => {
   const [gameOver , setGameOver]=useState(false)
 
   // Socket instance
-  const socket = useMemo(() => io('http://localhost:3000'), []);
+  const socket = useMemo(() => io('https://buckshot.onrender.com'), []);
 
   // On mount: Socket setup and cleanup
   useEffect(() => {
