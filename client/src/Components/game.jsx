@@ -9,6 +9,7 @@ const Game = () => {
   const [oppoId, setOppoID] = useState(null);
   const [timer, setTimer] = useState(30);
   const [items, setItems] = useState([]);
+  const [shuffledItems, setShuffledItems] = useState([]);
   const [bulletIndex, setBulletIndex] = useState(0);
   const [myLive, setMyLive] = useState(8);
   const [oppoLive, setOppoLive] = useState(8);
@@ -48,11 +49,20 @@ const Game = () => {
 
   // Gun pointing updates
   useEffect(() => {
-    socket.emit('gunPoint',gunPoint)
-    socket.on('gunPoint2',(gunpoint)=>{
-        setGunPoint(gunpoint)
-    })
-  }, [socket , gunPoint]);
+    // Emit gun point changes when it changes
+    if (myTurn) {
+      socket.emit('gunPoint', gunPoint);
+    }
+  
+    // Listen for gun point updates from the other player
+    socket.on('gunPoint2', (newGunPoint) => {
+      setGunPoint(newGunPoint); // Update gun direction for the opponent
+    });
+  
+    return () => {
+      socket.off('gunPoint2');
+    };
+  }, [gunPoint, myTurn]);
 
 
   // Turn changes
@@ -104,7 +114,12 @@ useEffect(() => {
 }, [bulletIndex, items.length, socket]);
 
 
-
+//random bullets generate
+useEffect(() => {
+  // Shuffle items only once when received
+  const shuffled = [...items].sort(() => Math.random() - 0.5);
+  setShuffledItems(shuffled);
+}, [items]);
 
 
 //healthbar
@@ -125,11 +140,31 @@ useEffect(() => {
    
   }
 }, [myLive, oppoLive]);
+
+//fire gun sound
+useEffect(() => {
+  socket.on('gunshotSound', (soundPath) => {
+    const gunSound = new Audio(soundPath);
+    console.log('Playing sound:', soundPath);
+    gunSound.play().catch((err) => {
+      console.error('Error playing gunshot sound:', err);
+    });
+  });
+
+  return () => {
+    socket.off('gunshotSound'); // Cleanup listener on unmount
+  };
+}, [socket , bulletIndex]);
+
+
+
  
 //fire gun function
 const fireGun = (setLive, isOpponent) => {
-  const audio = new Audio(items[bulletIndex] === 0 ? './sounds/clickfire.mp3' : './sounds/gunfire.mp3');
-  audio.play();
+ const soundPath = items[bulletIndex] === 0 ? './sounds/clickfire.mp3' : './sounds/gunfire.mp3';
+ const gunSound =new Audio(soundPath)
+ gunSound.play()
+  socket.emit('gunSound', soundPath); 
 
   // Update health if a bullet is fired
   if (items[bulletIndex] !== 0) {
@@ -168,7 +203,7 @@ const fireGun = (setLive, isOpponent) => {
         {myLive <= 0 ? 'You Lost!' : 'You Won!'}
       </h2>
     </div>
-    <img src={myLive<=0?'./player/lose.png':'./player/win.png'} alt="" />
+    <img src={myLive<=0?'./player/lose.png':'./player/win.png'} alt="" className='h-[60%] object-contain'/>
 
     {/* Button */}
     <Link to='/'
@@ -181,9 +216,8 @@ const fireGun = (setLive, isOpponent) => {
       {/* Bullets Section */}
       <div className={`bullets grid place-content-center backdrop-blur-sm absolute top-0 h-screen w-screen z-40 ${!showBullets && 'hidden'}`}>
       <div className="bulletcont flex gap-5">
-  {[...items] // Create a shallow copy of the original array
-    .sort(() => Math.random() - 0.5) // Shuffle the copied array
-    .map((val, index) => (
+  {
+    shuffledItems.map((val, index) => (
       <div
         key={index}
         className="w-5 h-12 flex flex-col items-center rounded-t-lg overflow-hidden relative"

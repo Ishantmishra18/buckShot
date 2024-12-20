@@ -87,7 +87,7 @@ const Home = () => {
       )}
 
       <footer className="mt-10 text-sm opacity-70">
-        © {new Date().getFullYear()} Rock-Paper-Scissors. Have fun!
+        © {new Date().getFullYear()} version 1.0
       </footer>
     </div>
   );

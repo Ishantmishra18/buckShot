@@ -8,7 +8,7 @@ const app = express();
 const server = http.createServer(app);
 const io = new Server(server, {
   cors: {
-    origin: 'https://buckshot-1-frontend.onrender.com/', // Update with your client URL if different
+    origin: 'https://buckshot-1-frontend.onrender.com',
     methods: ['GET', 'POST'],
     credentials: true,
   },
@@ -44,6 +44,8 @@ const generateBullets = () => {
 };
 
 let bullets;
+
+
 
 io.on('connection', (socket) => {
   console.log(`Player connected: ${socket.id}`);
@@ -101,9 +103,27 @@ io.on('connection', (socket) => {
     }
   });
 
-  socket.on('gunPoint',(gunpoint)=>{
-    io.emit('gunPoint2',gunpoint)
-  })
+  // Handle gun pointing updates from the client
+socket.on('gunPoint', (gunPoint) => {
+  const roomName = Object.keys(rooms).find((room) => rooms[room].includes(socket.id));
+  if (roomName) {
+    const otherPlayer = rooms[roomName].find(playerId => playerId !== socket.id);
+    if (otherPlayer) {
+      socket.to(otherPlayer).emit('gunPoint2', gunPoint); // Broadcast gunPoint to the opponent
+    }
+  }
+});
+
+//Gun Sound Effect
+socket.on('gunSound', (soundPath) => {
+  const roomName = Object.keys(rooms).find((room) => rooms[room].includes(socket.id));
+  if (roomName) {
+    const otherPlayer = rooms[roomName].find(playerId => playerId !== socket.id);
+    if (otherPlayer) {
+      socket.to(otherPlayer).emit('gunshotSound', soundPath);
+    }
+  }
+});
 
   socket.on('bulletUpdate', (bulletIndex) => {
     const roomName = Object.keys(rooms).find((room) => rooms[room].includes(socket.id));
