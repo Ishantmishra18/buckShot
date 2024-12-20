@@ -8,7 +8,7 @@ const app = express();
 const server = http.createServer(app);
 const io = new Server(server, {
   cors: {
-    origin: 'https://buckshot-1-frontend.onrender.com',
+    origin: 'https://buckshot-1-frontend.onrender.com', // Update with your client URL if different
     methods: ['GET', 'POST'],
     credentials: true,
   },
