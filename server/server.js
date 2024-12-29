@@ -8,7 +8,7 @@ const app = express();
 const server = http.createServer(app);
 const io = new Server(server, {
   cors: {
-    origin: 'https://buckshot-1-frontend.onrender.com', // Update with your client URL if different
+    origin: 'https://buckshot-1-frontend.onrender.com',
     methods: ['GET', 'POST'],
     credentials: true,
   },
@@ -91,6 +91,17 @@ io.on('connection', (socket) => {
       io.to(playerId).emit('startGame');  // Start game for both players in the room
     });
   };
+
+    // flash visuals
+    socket.on('flash',()=>{
+      const roomName = Object.keys(rooms).find((room) => rooms[room].includes(socket.id));
+        if (roomName) {
+          const otherPlayer = rooms[roomName].find(playerId => playerId !== socket.id);
+       if (otherPlayer) {
+        socket.to(otherPlayer).emit('flash');
+      }
+        }
+    })
 
   // Turn change logic
   socket.on('turnChangeit', () => {
